@@ -76,3 +76,67 @@ project. But I want to be able to open source the code so others can comment, bu
 the project.
 
 
+HLD - High Level Design
+---
+
+What is HTML? HTML is a markup language that is derived from XML. HTML
+is used to tell webbrowsers how to render a page on the screen.
+
+HTML consists of tags which are used to instruct the browser how to render
+a page. 
+
+The layout of a common HTML is as follows
+'''
+<html>
+	<head><style><!-- put your styles in here --></style></head>
+	<body>
+		<h1>Example Header</h1>
+		<p>Sample paragraph goes here</p>
+	</body>
+</html>
+'''
+
+The way I plan on parsing the mark down is to translate the structures in
+markdown into C++ objects representing the appropriate HTML. Each piece will
+contain the content and will be built similar to an abstract syntax tree or 
+linked list so we can just print out the pieces afterward.  I don't know how 
+performant this will be, I can't say I care right now. Make it work. Make it
+good. Make it fast.
+
+
+Log
+---
+08.13.2014 
+- Completed initial logging
+- Completed first cut parsing for headings
+- Debugged printing document
+
+08.15.2014
+- Completed statemachine beginning
+- Reworked parsing engine back to where it was
+
+08.18.2014
+- Fixed state machine to use only one state instance per state transition
+- owned_ptr implementation
+
+ToDo
+---
+- {08.15.2014} Practical nesting of nodes i.e. how the fk?
+- {08.15.2014} Implement paragraphs
+- Upgrade logging to actually be more useful than just "info"
+- Start looking at exception support
+- Tighten up the test framework; so it doesnt just return use exceptions
+- {08.18.2014} Change this to a state machine
+   - Read first line
+   - Either it matches a case or we put it in waiting
+   - Read next line either it matches an end case or we append
+   - Repeat
+- Implement nested lists 
+   - on_enter_state - push a new list on the stack
+   - if the line is within the same level add it to the list
+   - else transition to the same state
+   - drop a level and print on-exit 
+- Implement inline stuff on the nodes
+- Implement inline parsing
+- Spell check
+- CSS stuff
