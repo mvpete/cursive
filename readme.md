@@ -40,7 +40,7 @@ My Requirements
 
 Supported Markdown
 ---
-
+```
 -- Headings
 # H1                         (supported)
 ## H2                        (supported) 
@@ -66,7 +66,7 @@ Alternate H2                 (supported)
 _underline_                 (not supported)
 ![alt tag](img src)         (not supported)
 [link text](link)           (not supported)
-
+```
 
 POT - Plan of Attack
 ---
