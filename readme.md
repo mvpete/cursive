@@ -1,6 +1,7 @@
 CURSIVE -- a markdown parser
 ===
 
+
 Foreward
 ---
 The idea behind the cursive markdown parser was simple. I wasn't satisified with
@@ -39,7 +40,7 @@ My Requirements
 
 Supported Markdown
 ---
-
+```
 -- Headings
 # H1                         (supported)
 ## H2                        (supported) 
@@ -65,7 +66,7 @@ Alternate H2                 (supported)
 _underline_                 (not supported)
 ![alt tag](img src)         (not supported)
 [link text](link)           (not supported)
-
+```
 
 POT - Plan of Attack
 ---
@@ -74,3 +75,77 @@ project. But I want to be able to open source the code so others can comment, bu
 the project.
 
 
+HLD - High Level Design
+---
+
+What is HTML? HTML is a markup language that is derived from XML. HTML
+is used to tell webbrowsers how to render a page on the screen.
+
+HTML consists of tags which are used to instruct the browser how to render
+a page. 
+
+The layout of a common HTML is as follows
+```
+<html>
+	<head><style><!-- put your styles in here --></style></head>
+	<body>
+		<h1>Example Header</h1>
+		<p>Sample paragraph goes here</p>
+	</body>
+</html>
+```
+
+The way I plan on parsing the mark down is to translate the structures in
+markdown into C++ objects representing the appropriate HTML. Each piece will
+contain the content and will be built similar to a DOM or Linked List so we can just print out the pieces afterward.  I don't know how 
+performant this will be, I can't say I care right now. Make it work. Make it
+good. Make it fast.
+
+Goof Log
+---
+{08.29.2014} - ~~I goofed and broke this whole thing. I'll fix it. I will.~~ Fixed it 
+
+
+Log
+---
+08.13.2014 
+- Completed initial logging
+- Completed first cut parsing for headings
+- Debugged printing document
+
+08.15.2014
+- Completed statemachine beginning
+- Reworked parsing engine back to where it was
+
+08.18.2014
+- Fixed state machine to use only one state instance per state transition
+- owned_ptr implementation
+
+08.29.2014
+- Started Windows project (which doesn't compile in 2010). Woops
+- Pushed to GitHub
+- Implmented inlining of node content
+
+ToDo
+---
+- {08.15.2014} Practical nesting of nodes i.e. how the fk?
+- {08.15.2014} Implement paragraphs
+- Upgrade logging to actually be more useful than just "info"
+- Start looking at exception support
+- Tighten up the test framework; so it doesnt just return use exceptions
+- {08.18.2014} Change this to a state machine
+   - Read first line
+   - Either it matches a case or we put it in waiting
+   - Read next line either it matches an end case or we append
+   - Repeat
+- {08.23.2014} Implement nested lists 
+   - on_enter_state - push a new list on the stack
+   - if the line is within the same level add it to the list
+   - else transition to the same state
+   - drop a level and print on-exit 
+- {08.29.2014} Implement inline stuff on the nodes
+- Implement inline parsing
+- Change the entire node structure to just be content nodes
+- Refactor to support HTML Document AND PDF Document
+- Spell check
+- CSS stuff

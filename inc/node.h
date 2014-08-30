@@ -21,7 +21,7 @@ namespace tdp
 
     class string_content : public icontent
     {
-	const std::string &inner_text_;
+        std::string inner_text_;
     public:
 	string_content(const std::string &text);
 	virtual std::string to_string() const override;
@@ -34,6 +34,8 @@ namespace tdp
 	std::vector<attribute> attr_;
 	std::string inner_text_;
 	bool bookend_;
+	node_content(node_content&)=delete;
+
 
     public:
 	node_content(const std::string &tag, const std::vector<attribute> &attr, bool bookend = true);

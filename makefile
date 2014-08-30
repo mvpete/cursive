@@ -1,9 +1,9 @@
 
 all: mark-down
 
-mark-down: main.o node.o document.o
-	g++ -std=c++11 -I ./ -o mark-down bin/main.o bin/node.o bin/document.o bin/diagnostics.o
-tests: node.o document.o tests.o state_machine diagnostics.o
+mark-down: main.o node.o document.o state_machine.o diagnostics.o
+	g++ -std=c++11 -I ./ -o mark-down bin/main.o bin/node.o bin/document.o bin/diagnostics.o bin/state_machine.o
+tests: node.o document.o tests.o state_machine.o diagnostics.o
 	g++ -std=c++11 -o md-tests bin/node.o bin/document.o bin/diagnostics.o bin/tests.o bin/state_machine.o
 
 tests.o: src/tests.cpp
@@ -19,5 +19,5 @@ main.o: src/main.cpp
 diagnostics.o: src/diagnostics.cpp
 	g++ -std=c++11 -c -I ./ -o bin/diagnostics.o src/diagnostics.cpp
 
-state_machine: src/state_machine.cpp
+state_machine.o: src/state_machine.cpp
 	g++ -std=c++11 -c -I ./ -o bin/state_machine.o src/state_machine.cpp

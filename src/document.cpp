@@ -59,6 +59,11 @@ tdp::node& tdp::document::add(node *n)
     return *level_.top().current();
 }
 
+tdp::node& tdp::document::current()
+{
+    return *level_.top().current();
+}
+
 void tdp::document::step_in()
 {
     // diagnostics::log_trace(id_, "step in");
@@ -222,6 +227,80 @@ void wait_for_line_state::on_exit_state(int reason)
     diagnostics::log_info("wait_for_line::on_exit_state");
 }
 
+std::unique_ptr<node_content> create_bold(const std::string line, size_t start, size_t end)
+{
+    tdp::node::attribute_list attr;
+    std::unique_ptr<node_content> bold(new tdp::node_content("b",attr));
+    bold->inner(line.substr(start,end-(start)));
+    return bold;
+}
+
+std::unique_ptr<node_content> create_italic(const std::string line, size_t start, size_t end)
+{
+    tdp::node::attribute_list attr;
+    std::unique_ptr<node_content> ital(new tdp::node_content("i",attr));
+    ital->inner(line.substr(start,end-(start)));
+    return ital;
+}
+
+bool scan_for(const char c, const std::string line, size_t start, size_t &end)
+{
+    end=start+line.substr(start).find(c);
+    return end!=std::string::npos;
+}
+
+bool parse_inline(const std::string &line, std::vector<std::unique_ptr<icontent>> &content)
+{
+    // what are the inlines
+    // * italics *
+    // *( bold )*
+    // ~~strike~~
+    // [link](ref)
+    // ![image](ref)
+    int lb(0);
+    for(int i=0; i<line.size(); ++i)
+    {
+	if(line[i]=='*')
+	{
+	    size_t str(i),end(line.size());
+	    if(line[i+1]=='(')
+	    {
+		str=i+1;
+		if(scan_for(')',line,str,end))
+		{
+		    content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb,str-1-lb))));
+		    content.push_back(create_bold(line, str+1,end));
+		    lb=end+2;
+		    i=lb;
+		}
+		else
+		    return false;
+	    }
+	    else
+	    {
+		if(scan_for('*',line,str+1,end))
+		{
+		    content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb,str-lb))));
+		    content.push_back(create_italic(line,str+1,end));
+		    lb=end+1;
+		    i=lb;
+		}
+		else
+		    return false;
+	    }
+	    /*if(line[i]=='~'&&line[i+1]=='~')
+	    {
+		if(scan_for('~',line,str,end))
+		    parse_strike(line,str,end);
+	    }
+	    */
+	}
+    }
+    if(lb<line.size())
+	content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb,line.size()-lb))));
+    return true;
+}
+
 void wait_for_line_state::parse_line(const std::string &line)
 {
 	if( line.empty() )
@@ -229,12 +308,21 @@ void wait_for_line_state::parse_line(const std::string &line)
 	    diagnostics::log_info("empty line");
 	    return;
 	}
-		
+	
+	std::vector<std::unique_ptr<icontent>> inlines;
+	
+  
 	if( compare(line, "# ", 2) )
 	{
 	    diagnostics::log_info("adding heading 1");
 	    tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h1"));
-	    n.content(line.substr(2));
+	
+	    if(!parse_inline(line.substr(2),inlines))
+		return;
+	    for(std::unique_ptr<icontent> &ct : inlines)
+	    {
+		n.content(std::move(ct));
+	    }
 	}
 	else if( compare(line, "## ", 3) )
 	{
@@ -388,6 +476,7 @@ void read_unordered_list_state::parse_line(const std::string &line)
     if(pos == std::string::npos || !is_leading_space(line, pos))
     {
 	// add it to the current
+	doc.current().content(line);
     }
     else
     {

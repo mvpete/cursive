@@ -1,4 +1,5 @@
 #include "inc/node.h"
+#include "inc/diagnostics.h"
 
 #include <sstream>
 
