@@ -1,6 +1,8 @@
 CURSIVE -- a markdown parser
 ===
 
+{08.29.2014} - I goofed and broke this whole thing. I'll fix it. I will. 
+
 Foreward
 ---
 The idea behind the cursive markdown parser was simple. I wasn't satisified with
