@@ -86,7 +86,7 @@ HTML consists of tags which are used to instruct the browser how to render
 a page. 
 
 The layout of a common HTML is as follows
-'''
+```
 <html>
 	<head><style><!-- put your styles in here --></style></head>
 	<body>
@@ -94,7 +94,7 @@ The layout of a common HTML is as follows
 		<p>Sample paragraph goes here</p>
 	</body>
 </html>
-'''
+```
 
 The way I plan on parsing the mark down is to translate the structures in
 markdown into C++ objects representing the appropriate HTML. Each piece will
