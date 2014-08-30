@@ -1,4 +1,4 @@
-CURSIVE -- a markdown parser
+CURSIVE -- a markdown parser (DO NOT PULL DOESN'T COMPILE)
 ===
 
 {08.29.2014} - I goofed and broke this whole thing. I'll fix it. I will. 
