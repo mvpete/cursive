@@ -1,7 +1,6 @@
-CURSIVE -- a markdown parser (DO NOT PULL DOESN'T COMPILE)
+CURSIVE -- a markdown parser
 ===
 
-{08.29.2014} - I goofed and broke this whole thing. I'll fix it. I will. 
 
 Foreward
 ---
@@ -103,6 +102,10 @@ linked list so we can just print out the pieces afterward.  I don't know how
 performant this will be, I can't say I care right now. Make it work. Make it
 good. Make it fast.
 
+Goof Log
+---
+{08.29.2014} - ~~I goofed and broke this whole thing. I'll fix it. I will.~~ Fixed it 
+
 
 Log
 ---
@@ -119,6 +122,11 @@ Log
 - Fixed state machine to use only one state instance per state transition
 - owned_ptr implementation
 
+08.29.2014
+- Started Windows project (which doesn't compile in 2010). Woops
+- Pushed to GitHub
+- Implmented inlining of node content
+
 ToDo
 ---
 - {08.15.2014} Practical nesting of nodes i.e. how the fk?
@@ -131,12 +139,14 @@ ToDo
    - Either it matches a case or we put it in waiting
    - Read next line either it matches an end case or we append
    - Repeat
-- Implement nested lists 
+- {08.23.2014} Implement nested lists 
    - on_enter_state - push a new list on the stack
    - if the line is within the same level add it to the list
    - else transition to the same state
    - drop a level and print on-exit 
-- Implement inline stuff on the nodes
+- {08.29.2014} Implement inline stuff on the nodes
 - Implement inline parsing
+- Change the entire node structure to just be content nodes
+- Refactor to support HTML Document AND PDF Document
 - Spell check
 - CSS stuff
