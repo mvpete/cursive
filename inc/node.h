@@ -43,11 +43,15 @@ namespace tdp
     };
     
 
-    class node : public icontent
+    class node
     {
     public:
 	typedef std::pair<std::string,std::string> attribute;
 	typedef std::vector<attribute> attribute_list;
+
+	class node_cc
+	{
+	};
 
     private:
 	bool rebuild_content_;
@@ -64,7 +68,7 @@ namespace tdp
 	std::unique_ptr<node> sibling_;
 	std::unique_ptr<node> child_;
     public:
-	node(const node_cc &ncc);
+	node(const std::string &string);
 	node();
 	virtual ~node();
 	tdp::node* sibling(std::unique_ptr<node> sibling);
@@ -75,7 +79,7 @@ namespace tdp
 	virtual const std::string& tag();
 	void content(const std::string &content);
 	void content(std::unique_ptr<icontent> new_content);
-	virtual std::string to_string() const;
+	virtual const std::string& content();
     };
 
     std::unique_ptr<icontent> create_content(const std::string &tag, const std::vector<attribute> &attr, bool bookend=true);

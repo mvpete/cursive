@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cursive_win_lib", "cursive_win.vcxproj", "{CFBA022C-2619-4248-BAC6-F34DFD1D1640}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cursive_win_main", "..\cursive_win_main\cursive_win_main.vcxproj", "{4768477F-1246-4BCC-B367-CF9726513D4A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cursive_win_tests", "cursive_win_tests\cursive_win_tests.vcxproj", "{9F2A2A08-FD91-423B-BAB7-F54EAFC97D12}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CFBA022C-2619-4248-BAC6-F34DFD1D1640}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CFBA022C-2619-4248-BAC6-F34DFD1D1640}.Debug|Win32.Build.0 = Debug|Win32
+		{CFBA022C-2619-4248-BAC6-F34DFD1D1640}.Release|Win32.ActiveCfg = Release|Win32
+		{CFBA022C-2619-4248-BAC6-F34DFD1D1640}.Release|Win32.Build.0 = Release|Win32
+		{4768477F-1246-4BCC-B367-CF9726513D4A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4768477F-1246-4BCC-B367-CF9726513D4A}.Debug|Win32.Build.0 = Debug|Win32
+		{4768477F-1246-4BCC-B367-CF9726513D4A}.Release|Win32.ActiveCfg = Release|Win32
+		{4768477F-1246-4BCC-B367-CF9726513D4A}.Release|Win32.Build.0 = Release|Win32
+		{9F2A2A08-FD91-423B-BAB7-F54EAFC97D12}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9F2A2A08-FD91-423B-BAB7-F54EAFC97D12}.Debug|Win32.Build.0 = Debug|Win32
+		{9F2A2A08-FD91-423B-BAB7-F54EAFC97D12}.Release|Win32.ActiveCfg = Release|Win32
+		{9F2A2A08-FD91-423B-BAB7-F54EAFC97D12}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

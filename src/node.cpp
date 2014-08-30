@@ -30,7 +30,7 @@ std::string node_content::to_string() const
 {
     std::stringstream ss;
     ss << "<" << tag_ << " ";
-    for(attribute attr : attr_)
+    for(attribute attr : attr_) // change to foreach
     {
 	ss<< attr.first << "='" << attr.second <<"' ";
     }
