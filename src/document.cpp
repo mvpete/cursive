@@ -2,6 +2,7 @@
 #include "inc/diagnostics.h"
 
 #include <sstream>
+#include <cctype>
 
 tdp::document::document()
 {

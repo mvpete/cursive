@@ -41,7 +41,7 @@ void diagnostics::log(levels lvl, const std::string &msg)
 	*osp_ << "ERR: ";
 	break;
     }
-    *osp_ << msg << std::endl;
+    *osp_ << msg.c_str() << std::endl;
 }
 
 
