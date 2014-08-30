@@ -97,8 +97,7 @@ The layout of a common HTML is as follows
 
 The way I plan on parsing the mark down is to translate the structures in
 markdown into C++ objects representing the appropriate HTML. Each piece will
-contain the content and will be built similar to an abstract syntax tree or 
-linked list so we can just print out the pieces afterward.  I don't know how 
+contain the content and will be built similar to a DOM or Linked List so we can just print out the pieces afterward.  I don't know how 
 performant this will be, I can't say I care right now. Make it work. Make it
 good. Make it fast.
 
