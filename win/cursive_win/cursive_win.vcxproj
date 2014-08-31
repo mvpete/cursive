@@ -19,10 +19,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\diagnostics.cpp" />
     <ClCompile Include="..\..\src\document.cpp" />
-    <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\node.cpp" />
     <ClCompile Include="..\..\src\state_machine.cpp" />
-    <ClCompile Include="..\..\src\tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\readme.md" />
