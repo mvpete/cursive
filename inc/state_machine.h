@@ -46,7 +46,6 @@ namespace finite
 	virtual ~state_machine(){};
 	void begin(int state_id);
 	void end_state(int tcode);
-	void parse_line(const std::string &line);
 	
 	template<class T>
 	class owned_ptr

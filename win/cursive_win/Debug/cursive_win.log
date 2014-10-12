@@ -1,17 +1,16 @@
-﻿Build started 8/30/2014 2:58:37 PM.
+﻿Build started 10/12/2014 12:01:23 PM.
      1>Project "D:\VS Projects\cursive\win\cursive_win\cursive_win.vcxproj" on node 2 (Build target(s)).
-     1>Lib:
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I..\..\ /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\src\diagnostics.cpp
+         diagnostics.cpp
+       Lib:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"D:\VS Projects\cursive\win\cursive_win\..\..\bin\Debug\cursive_lib.lib" /NOLOGO Debug\diagnostics.obj
          Debug\document.obj
-         Debug\main.obj
          Debug\node.obj
          Debug\state_machine.obj
-         Debug\tests.obj
-     1>main.obj : warning LNK4006: _main already defined in tests.obj; second definition ignored
-     1>main.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
          cursive_win.vcxproj -> D:\VS Projects\cursive\win\cursive_win\..\..\bin\Debug\cursive_lib.lib
      1>Done Building Project "D:\VS Projects\cursive\win\cursive_win\cursive_win.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:00.12
+Time Elapsed 00:00:00.52

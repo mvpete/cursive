@@ -55,7 +55,7 @@ class document_state_machine : public finite::state_machine
 public:
     document& get_document() { return doc_; }
     document_state_machine(document &doc);
-    void parse_line(const std::string &line);
+    void parse_line(std::string &line);
     const std::string & get_last_line();
 
 };
@@ -69,7 +69,7 @@ protected:
     }
 public:
     
-    virtual void parse_line(const std::string &line)=0;
+    virtual void parse_line(std::string &line)=0;
 };
 
 const int wait_for_line=0x01;
@@ -83,7 +83,7 @@ public:
     static const int id;
     virtual void on_enter_state();
     virtual void on_exit_state(int reason);
-    virtual void parse_line(const std::string &line);
+    virtual void parse_line(std::string &line) override;
     virtual int state_id();
 };
 
@@ -94,7 +94,7 @@ public:
     static const int id;
     virtual void on_enter_state();
     virtual void on_exit_state(int reason);
-    virtual void parse_line(const std::string &line);
+    virtual void parse_line(std::string &line) override;
     virtual int state_id();
 };
 
@@ -105,7 +105,7 @@ public:
     static const int id;
     virtual void on_enter_state();
     virtual void on_exit_state(int reason); 
-    virtual void parse_line(const std::string &line);
+    virtual void parse_line(std::string &line) override;
     virtual int state_id();
 };
 

@@ -201,7 +201,7 @@ document_state_machine::document_state_machine(document &doc)
 {
 }
 
-void document_state_machine::parse_line(const std::string &line)
+void document_state_machine::parse_line(std::string &line)
 {
 	last_line_ = line;
 	document_state* cur_state = dynamic_cast<document_state*>(current());
@@ -227,7 +227,7 @@ void wait_for_line_state::on_exit_state(int reason)
 	diagnostics::log_info("wait_for_line::on_exit_state");
 }
 
-std::unique_ptr<node_content> create_bold(const std::string line, size_t start, size_t end)
+std::unique_ptr<node_content> create_bold(const std::string &line, size_t start, size_t end)
 {
 	tdp::node::attribute_list attr;
 	std::unique_ptr<node_content> bold(new tdp::node_content("b", attr));
@@ -235,12 +235,29 @@ std::unique_ptr<node_content> create_bold(const std::string line, size_t start, 
 	return bold;
 }
 
-std::unique_ptr<node_content> create_italic(const std::string line, size_t start, size_t end)
+std::unique_ptr<node_content> create_italic(const std::string &line, size_t start, size_t end)
 {
 	tdp::node::attribute_list attr;
 	std::unique_ptr<node_content> ital(new tdp::node_content("i", attr));
 	ital->inner(line.substr(start, end - (start)));
 	return ital;
+}
+
+std::unique_ptr<node_content> create_image(const std::string &title_s, const std::string &link_s)
+{
+	tdp::node::attribute_list attr;
+	attr.push_back(std::make_pair("alt", title_s));
+	attr.push_back(std::make_pair("src", link_s));
+	return std::unique_ptr<node_content>(new tdp::node_content("img", attr));
+}
+
+std::unique_ptr<node_content> create_link(const std::string &title_s, const std::string &link_s)
+{
+	tdp::node::attribute_list attr;
+	attr.push_back(std::make_pair("href", link_s));
+	std::unique_ptr<node_content> link(new tdp::node_content("a", attr));
+	link->inner(title_s);
+	return link;
 }
 
 bool scan_for(const char c, const std::string line, size_t start, size_t &end)
@@ -249,7 +266,7 @@ bool scan_for(const char c, const std::string line, size_t start, size_t &end)
 	return end != std::string::npos;
 }
 
-bool parse_inline(const std::string &line, std::vector<std::unique_ptr<icontent>> &content)
+bool parse_inline(std::string &line, std::vector<std::unique_ptr<icontent>> &content)
 {
 	// what are the inlines
 	// * italics *
@@ -272,10 +289,10 @@ bool parse_inline(const std::string &line, std::vector<std::unique_ptr<icontent>
 					content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb, str - 1 - lb))));
 					content.push_back(create_bold(line, str + 1, end));
 					lb = end + 2;
-					i = lb;
+					line.erase(i, (lb - i));
 				}
 				else
-					return false;
+					continue;
 			}
 			else
 			{
@@ -284,47 +301,75 @@ bool parse_inline(const std::string &line, std::vector<std::unique_ptr<icontent>
 					content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb, str - lb))));
 					content.push_back(create_italic(line, str + 1, end));
 					lb = end + 1;
-					i = lb;
+					line.erase(i, (lb-i));
 				}
 				else
-					return false;
+					continue;
 			}
 		}
 		else if (line[i] == '!')
 		{
+			std::string title_s;
 			str = i + 1;
+			int lb_o(i);
 			if (line[i + 1] == '[')
 			{
 				if (scan_for(']', line, str + 1, end))
 				{
-					// title token
+					title_s = line.substr(str, end);
 				}
 				else
-					return false;
+					continue;
 				str = end + 1;
 				if (line[end + 1] == '(')
 				{
+					std::string link_s;
 					if (scan_for(')', line, str, end))
 					{
-						// tag token
+						link_s = line.substr(str + 1, end - (str + 1));
+						content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb, lb_o))));
+						content.push_back(create_image(title_s, link_s));
+						line.erase(i, ((end+1) - i));
 					}
 					else
-						return false;
+						continue;
 				}
 			}
 		}
 		else if (line[i] == '[')
 		{
+			std::string title_s;
+			int lb_o(i);
+			if (scan_for(']', line, str + 1, end))
+			{
+				title_s = line.substr(str+1, end-(str+1));
+			}
+			else
+				continue;
+			str = end + 1;
+			if (line[end + 1] == '(')
+			{
+				std::string link_s;
+				if (scan_for(')', line, str, end))
+				{
+					link_s = line.substr(str+1, end-(str+1));
+					content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb, lb_o))));
+					content.push_back(create_link(title_s, link_s));
+					line.erase(i, ((end + 1) - i));
+				}
+				else
+					continue;
+			}
 		}
 
 
 	}
-	if (lb < line.size())
+	if (line.size())
 		content.push_back(std::unique_ptr<icontent>(new string_content(line.substr(lb, line.size() - lb))));
 	return true;
 }
 
-void wait_for_line_state::parse_line(const std::string &line)
+void wait_for_line_state::parse_line(std::string &line)
 {
 	if (line.empty())
 	{
@@ -351,31 +396,56 @@ void wait_for_line_state::parse_line(const std::string &line)
 	{
 		diagnostics::log_info("adding heading 2");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h2"));
-		n.content(line.substr(3));
+		if (!parse_inline(line.substr(3), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 	}
 	else if (compare(line, "### ", 4))
 	{
 		diagnostics::log_info("adding heading 3");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h3"));
-		n.content(line.substr(4));
+		if (!parse_inline(line.substr(4), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 	}
 	else if (compare(line, "#### ", 5))
 	{
 		diagnostics::log_info("adding heading 4");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h4"));
-		n.content(line.substr(5));
+		if (!parse_inline(line.substr(5), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 	}
 	else if (compare(line, "##### ", 6))
 	{
 		diagnostics::log_info("adding heading 5");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h5"));
-		n.content(line.substr(6));
+		if (!parse_inline(line.substr(6), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 	}
 	else if (compare(line, "###### ", 7))
 	{
 		diagnostics::log_info("adding heading 6");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h6"));
-		n.content(line.substr(7));
+		if (!parse_inline(line.substr(7), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 	}
 	else if (line.find_first_of("+-") != std::string::npos)
 	{
@@ -410,13 +480,19 @@ void wait_for_block_end_state::on_exit_state(int reason)
 	diagnostics::log_info("wait_for_block_end::on_exit_state()");
 }
 
-void wait_for_block_end_state::parse_line(const std::string &line)
+void wait_for_block_end_state::parse_line(std::string &line)
 {
 	if (compare(line, "===", 3))
 	{
 		diagnostics::log_info("adding alt heading 1");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h1"));
-		n.content(block_.str());
+		std::vector<std::unique_ptr<icontent>> inlines;
+		if (!parse_inline(block_.str(), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 		block_.str("");
 		end_state(wait_for_line);
 	}
@@ -424,7 +500,13 @@ void wait_for_block_end_state::parse_line(const std::string &line)
 	{
 		diagnostics::log_info("adding alt heading 2");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("h2"));
-		n.content(block_.str());
+		std::vector<std::unique_ptr<icontent>> inlines;
+		if (!parse_inline(block_.str(), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 		block_.str("");
 		end_state(wait_for_line);
 	}
@@ -432,7 +514,14 @@ void wait_for_block_end_state::parse_line(const std::string &line)
 	{
 		diagnostics::log_info("adding paragraph");
 		tdp::node &n = get_state_machine()->get_document().add(tdp::create_node("p"));
-		n.content(block_.str());
+
+		std::vector<std::unique_ptr<icontent>> inlines;
+		if (!parse_inline(block_.str(), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			n.content(std::move(ct));
+		}
 		block_.str("");
 		end_state(wait_for_line);
 		// append to paragraph
@@ -459,7 +548,14 @@ void read_unordered_list_state::on_enter_state()
 	tdp::node &it = doc.add(tdp::create_node("li"));
 	std::string last(get_state_machine()->get_last_line());
 	tpos_ = (last.find_first_of("+-")) % 3; //I want tab of 3
-	it.content(last.substr(tpos_ + 1));
+	
+	std::vector<std::unique_ptr<icontent>> inlines;
+	if (!parse_inline(last.substr(tpos_ + 1), inlines))
+		return;
+	for (std::unique_ptr<icontent> &ct : inlines)
+	{
+		doc.current().content(std::move(ct));
+	}
 }
 
 void read_unordered_list_state::on_exit_state(int reason)
@@ -468,16 +564,23 @@ void read_unordered_list_state::on_exit_state(int reason)
 	get_state_machine()->get_document().step_out();
 }
 
-void read_unordered_list_state::parse_line(const std::string &line)
+void read_unordered_list_state::parse_line(std::string &line)
 {
+	
+	tdp::document &doc = get_state_machine()->get_document();
+
+	int step_ins(1);
 	if (line.empty())
 	{
+		while (step_ins > 0)
+		{
+			doc.step_out();
+			--step_ins;
+		}
 		diagnostics::log_info("parse_line empty read ending");
 		end_state(wait_for_line);
 		return;
 	}
-
-	tdp::document &doc = get_state_machine()->get_document();
 
 	size_t pos = line.find_first_of("+-");
 
@@ -487,12 +590,14 @@ void read_unordered_list_state::parse_line(const std::string &line)
 	{
 		diagnostics::log_info("list parse step out");
 		doc.step_out();
+		--step_ins;
 	}
 	else if (pos >= (tpos_ + 3))
 	{
 		diagnostics::log_info("list parse step in");
 		doc.add(tdp::create_node("ul"));
 		doc.step_in();
+		++step_ins;
 		tpos_ += 3;
 	}
 
@@ -500,12 +605,26 @@ void read_unordered_list_state::parse_line(const std::string &line)
 	{
 		// add it to the current
 		doc.current().content(line);
+		std::vector<std::unique_ptr<icontent>> inlines;
+		if (!parse_inline(line, inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			doc.current().content(std::move(ct));
+		}
+
 	}
 	else
 	{
 		diagnostics::log_info("list parse add item");
 		tdp::node &n = doc.add(tdp::create_node("li"));
-		n.content(line.substr(pos + 1));
+		std::vector<std::unique_ptr<icontent>> inlines;
+		if (!parse_inline(line.substr(pos + 1), inlines))
+			return;
+		for (std::unique_ptr<icontent> &ct : inlines)
+		{
+			doc.current().content(std::move(ct));
+		}
 	}
 
 }
