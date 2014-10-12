@@ -61,11 +61,12 @@ Alternate H2                 (supported)
 1. nested ordered list      (not supported)
 
 -- Inline styles
-*italics*                   (not supported)
-*(bold)*                    (not supported)
+*italics*                   (supported)
+*(bold)*                    (supported)
 _underline_                 (not supported)
-![alt tag](img src)         (not supported)
-[link text](link)           (not supported)
+![alt tag](img src)         (supported)
+[link text](link)           (supported)
+\''' codeblock              (not supported)
 ```
 
 POT - Plan of Attack
