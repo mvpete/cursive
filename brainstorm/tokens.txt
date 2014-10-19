@@ -1,10 +1,10 @@
 Possible tokens:
 
 These are needed for handling the different handling of text with different numbers of newlines and spaces:
-    NewlineLeadingSpace : \n* *
+    NewlineLeadingSpace : \n+ *
 
 To handle headers:
-    InlineHeaderOperator : #*
+    InlineHeaderOperator : #+
     PostHeaderOperator : \n(-|=){3,}
 
 For the various inline text modifiers:    
@@ -12,9 +12,12 @@ For the various inline text modifiers:
     StrongEmphasisOperator : \*\*|__
     StrikethroughOperator : ~~
 
+For just text:
+    Text : TEXT_CHAR+
+
 For lists (They can also be further nested but that will be handled in the parser):
-    OrderedListOperator : ( )*(DIGIT)\. 
-    UnorderedListOperator : ( )*(\*|\-|\+) 
+    OrderedListOperator : (DIGIT)\. 
+    UnorderedListOperator : (\*|\-|\+) 
     
 For the various types of links:
     BracketText : \[TEXT_CHAR*\]
