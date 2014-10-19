@@ -447,9 +447,9 @@ void wait_for_line_state::parse_line(std::string &line)
 			n.content(std::move(ct));
 		}
 	}
-	else if (line.find_first_of("+-") != std::string::npos)
+	else if (line.find_first_of("+->") != std::string::npos)
 	{
-		if (is_leading_space(line, line.find_first_of("+-"))) // inefficient IU knwo
+		if (is_leading_space(line, line.find_first_of("+->"))) // inefficient IU knwo
 		{
 			diagnostics::log_info("starting unordered list");
 			end_state(read_unordered_list);

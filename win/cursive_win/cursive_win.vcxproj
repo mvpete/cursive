@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\inc\ast.h" />
     <ClInclude Include="..\..\inc\diagnostics.h" />
     <ClInclude Include="..\..\inc\document.h" />
     <ClInclude Include="..\..\inc\node.h" />

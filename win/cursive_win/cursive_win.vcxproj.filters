@@ -30,6 +30,9 @@
     <ClInclude Include="..\..\inc\state_machine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\inc\ast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\diagnostics.cpp">
