@@ -13,6 +13,8 @@ using markdown_ast = boost::variant<std::string,
                                     boost::recursive_wrapper<struct markdown_group>,
                                     boost::recursive_wrapper<struct markdown_header>,
                                     boost::recursive_wrapper<struct markdown_paragraph>,
+                                    boost::recursive_wrapper<struct markdown_unordered_list>,
+                                    boost::recursive_wrapper<struct markdown_ordered_list>,
                                     boost::recursive_wrapper<struct markdown_blockquote>,
                                     boost::recursive_wrapper<struct markdown_code>,
                                     boost::recursive_wrapper<struct markdown_inline_code>,
@@ -38,6 +40,16 @@ struct markdown_header
 struct markdown_paragraph
 {
     markdown_ast contents;
+}
+
+struct markdown_unordered_list
+{
+    std::vector<markdown_ast> contents;
+}
+
+struct markdown_ordered_list
+{
+    std::vector<markdown_ast> contents;
 }
 
 struct markdown_blockquote
