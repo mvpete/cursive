@@ -1,0 +1,37 @@
+Possible tokens:
+
+These are needed for handling the different handling of text with different numbers of newlines and spaces:
+    NewlineLeadingSpace : \n* *
+
+To handle headers:
+    InlineHeaderOperator : #*
+    PostHeaderOperator : \n(-|=){3,}
+
+For the various inline text modifiers:    
+    EmphasisOperator : \*|_
+    StrongEmphasisOperator : \*\*|__
+    StrikethroughOperator : ~~
+
+For lists (They can also be further nested but that will be handled in the parser):
+    OrderedListOperator : ( )*(DIGIT)\. 
+    UnorderedListOperator : ( )*(\*|\-|\+) 
+    
+For the various types of links:
+    BracketText : \[TEXT_CHAR*\]
+    ImageText : !LinkText
+    UrlText : \(URL_CHAR*\)
+    RefUrl : \[TEXT_CHAR*\]:
+    
+For blockquotes:
+    BlockquoteOperator : \n[> ]*
+        (Will handle arbitrary nesting on a token-by-token basis)
+       
+For code:
+    InlineCode : `CODE_CHAR*`
+    BlockCode : ```\nCODE_CHAR*\n```
+    
+For horizontal rules:
+    HorizontalRuleOperator : \n[-_\*]{3,}\n
+    
+For further reference: https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#h6
+    
