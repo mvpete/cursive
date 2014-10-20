@@ -16,12 +16,14 @@
     <ClInclude Include="..\..\inc\document.h" />
     <ClInclude Include="..\..\inc\node.h" />
     <ClInclude Include="..\..\inc\state_machine.h" />
+    <ClInclude Include="..\..\inc\tokenizer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\diagnostics.cpp" />
     <ClCompile Include="..\..\src\document.cpp" />
     <ClCompile Include="..\..\src\node.cpp" />
     <ClCompile Include="..\..\src\state_machine.cpp" />
+    <ClCompile Include="..\..\src\tokenizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\readme.md" />
