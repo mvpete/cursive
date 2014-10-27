@@ -1,7 +1,7 @@
 Possible tokens:
 
-These are needed for handling the different handling of text with different numbers of newlines and spaces:
-    NewlineLeadingSpace : \n+ *
+Any number of newlines not a part of another token:
+    Newlines : \n+
 
 To handle headers:
     InlineHeaderOperator : #+
@@ -11,22 +11,27 @@ For the various inline text modifiers:
     EmphasisOperator : \*|_
     StrongEmphasisOperator : \*\*|__
     StrikethroughOperator : ~~
-
+    
 For just text:
-    Text : TEXT_CHAR+
+    Text : TEXT_CHAR+( TEXT_CHAR+)*
+    
+And to recognize spaces NOT a part of any other token:
+    Spaces : ( )+
+        Parentheses for clarity
 
 For lists (They can also be further nested but that will be handled in the parser):
-    OrderedListOperator : (DIGIT)\. 
-    UnorderedListOperator : (\*|\-|\+) 
+    OrderedListOperator : (DIGIT+\. )
+    UnorderedListOperator : \n((\*|\-|\+) )
     
 For the various types of links:
     BracketText : \[TEXT_CHAR*\]
-    ImageText : !LinkText
-    UrlText : \(URL_CHAR*\)
-    RefUrl : \[TEXT_CHAR*\]:
+    ImageText : !\[TEXT_CHAR*\]
+    UrlInline : \(URL_CHAR*\)
+    RefText : (\[TEXT_CHAR*\]: )
+    UrlText : URL_CHAR+
     
 For blockquotes:
-    BlockquoteOperator : \n[> ]*
+    BlockquoteOperator : \n(> ?)+
         (Will handle arbitrary nesting on a token-by-token basis)
        
 For code:
@@ -34,7 +39,10 @@ For code:
     BlockCode : ```\nCODE_CHAR*\n```
     
 For horizontal rules:
-    HorizontalRuleOperator : \n[-_\*]{3,}\n
+    HorizontalRuleOperator : \n[-_\*]{3,}(\n|EOF)
+    
+And last but not least:
+    Eof : EOF
     
 For further reference: https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#h6
     
