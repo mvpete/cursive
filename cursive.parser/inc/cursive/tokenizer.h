@@ -3,6 +3,7 @@
 
 #include <string_view>
 #include <cursive/loc.h>
+#include <cursive/literals.h>
 
 #include <ctype.h>
 
@@ -88,7 +89,7 @@ namespace cursive
 
         loc loc() const
         {
-            return loc{ 1,1 };
+            return cursive::loc{ 1,1 };
         }
 
         bool operator==(tokens code) const
@@ -121,6 +122,7 @@ namespace cursive
         using char_t = CharT;
         using token_t = basic_token<char_t>;
         using const_iterator = const_iterator<char_t>;
+
     public:
         basic_tokenizer(const_iterator begin, const_iterator end)
             :begin_(begin),end_(end),where_(begin)
@@ -136,21 +138,26 @@ namespace cursive
             char_t t = *where_;
             switch (t)
             {
-            case '#':
+            case detail::get_literal<char_t>(detail::literals::hashtag):
                 return scan_header_token();
-            case '-':
-            case '=':
+
+            case detail::get_literal<char_t>(detail::literals::minus):
+            case detail::get_literal<char_t>(detail::literals::equal):
                 return scan_post_header_token();
-            case '*':
-            case '_':
+
+            case detail::get_literal<char_t>(detail::literals::asteriks):
+            case detail::get_literal<char_t>(detail::literals::underscore):
                 return scan_emphasis_token();
-            case '~':
+
+            case detail::get_literal<char_t>(detail::literals::tilde):
                 return scan_strike_token();
-            case ' ':
-            case '\t':
+
+            case detail::get_literal<char_t>(detail::literals::space):
+            case detail::get_literal<char_t>(detail::literals::tab):
                 return scan_whitespace_token();
-            case '\r':
-            case '\n':
+
+            case detail::get_literal<char_t>(detail::literals::cr):
+            case detail::get_literal<char_t>(detail::literals::nl):
                 return scan_eol_token();
             default:
                 return scan_text_token();
@@ -159,7 +166,7 @@ namespace cursive
 
         loc loc() const
         {
-            return loc{ 1, 1 };
+            return cursive::loc{ 1, 1 };
         }
 
         void reset()
@@ -171,7 +178,7 @@ namespace cursive
         token_t scan_header_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == '#')
+            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::hashtag))
             {
                 ++where_;
             }
@@ -196,7 +203,7 @@ namespace cursive
         token_t scan_whitespace_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == ' ' || *where_ == '\t')
+            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::space) || *where_ == detail::get_literal<char_t>(detail::literals::tab))
             {
                 ++where_;
             }
@@ -206,7 +213,7 @@ namespace cursive
         token_t scan_emphasis_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == '_' || *where_ == '*')
+            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::underscore) || *where_ == detail::get_literal<char_t>(detail::literals::asteriks))
             {
                 ++where_;
             }
@@ -216,7 +223,7 @@ namespace cursive
         token_t scan_strike_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == '~')
+            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::tilde))
             {
                 ++where_;
             }
@@ -226,7 +233,7 @@ namespace cursive
         token_t scan_eol_token()
         {
             auto begin = where_;
-            if (*where_ == '\r' && where_ + 1 != end_ && *(where_ + 1) == '\n')
+            if (*where_ == detail::get_literal<char_t>(detail::literals::cr) && where_ + 1 != end_ && *(where_ + 1) == detail::get_literal<char_t>(detail::literals::nl))
             {
                 where_ += 2;
             }

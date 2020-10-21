@@ -1,5 +1,5 @@
 
-#include <cursive/parser.h>
+#include <cursive/cursive.h>
 
 int main()
 {

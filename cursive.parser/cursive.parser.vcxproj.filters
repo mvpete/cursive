@@ -36,5 +36,8 @@
     <ClInclude Include="inc\cursive\element.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\cursive\literals.h">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

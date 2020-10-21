@@ -25,6 +25,7 @@
     <ClInclude Include="inc\cursive\loc.h" />
     <ClInclude Include="inc\cursive\parser.h" />
     <ClInclude Include="inc\cursive\tokenizer.h" />
+    <ClInclude Include="inc\cursive\literals.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -27,6 +27,19 @@ namespace cursivetest
 			auto child = element.children()[0];
 			Check::HasValue("Hello world", child);
 		}
+
+		TEST_METHOD(test_parser_basic_header_wide)
+		{
+			std::wstring text(L"# Hello world");
+			auto doc = cursive::parse(text);
+
+			Check::HasChildren(1, doc);
+			auto element = doc.child_at(0);
+			Check::IsType(cursive::element_types::heading, element);
+			Check::HasChildren(1, element);
+			auto child = element.children()[0];
+			Check::HasValue(L"Hello world", child);
+		}
 			
 		TEST_METHOD(test_parser_basic_header_eol)
 		{
