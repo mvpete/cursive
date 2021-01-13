@@ -18,9 +18,6 @@ namespace CppUnitTestFramework
         case element_types::none:
             ws << "none";
             break;
-        case element_types::document:
-            ws << "document";
-            break;
         case element_types::heading:
             ws << "heading";
             break;

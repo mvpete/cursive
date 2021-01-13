@@ -16,14 +16,17 @@ namespace cursive
         header,
         emphasis,
         strikethrough,
+        unordered_list,
+        horizontal_rule,
         text,
         space,
+        post_header,
         ordered_list,
-        unordered_list,
         rbrack,
         lbrack,
         ibrack,
-        inline_url,
+        link,
+        image,
         ref_text,
         block_quote,
         backtick,
@@ -37,7 +40,11 @@ namespace cursive
     template <typename CharT>
     class basic_token
     {
+        
     public:
+
+        using string_view = std::basic_string_view<CharT>;
+
         basic_token(tokens code)
             :code_(code)
         {
@@ -48,8 +55,13 @@ namespace cursive
         {
         }
 
+        basic_token(tokens code, const string_view& text, const string_view& data)
+            :code_(code), text_(text), data_(data)
+        {
+        }
+
         basic_token(const basic_token& rhs)
-            :code_(rhs.code_), text_(rhs.text_)
+            :code_(rhs.code_), text_(rhs.text_), data_(rhs.data_)
         {
 
         }
@@ -58,21 +70,24 @@ namespace cursive
         {
             code_ = rhs.code_;
             text_ = rhs.text_;
+            data_ = rhs.data_;
             return *this;
         }
 
-        basic_token& operator=(basic_token&& rhs)
+        basic_token& operator=(basic_token&& rhs) noexcept
         {
             std::swap(code_, rhs.code_);
             std::swap(text_, rhs.text_);
+            std::swap(data_, rhs.data_);
             return *this;
         }
 
-        basic_token(basic_token&& rhs)
+        basic_token(basic_token&& rhs) noexcept
             :code_(tokens::empty)
         {
             std::swap(code_, rhs.code_);
             std::swap(text_, rhs.text_);
+            std::swap(data_, rhs.data_);
         }
         tokens code() const 
         {
@@ -85,6 +100,11 @@ namespace cursive
         const std::basic_string_view<CharT>& text() const
         {
             return text_;
+        }
+
+        const std::basic_string_view<CharT>& data() const
+        {
+            return data_;
         }
 
         loc loc() const
@@ -112,6 +132,7 @@ namespace cursive
     private:
         tokens code_;
         std::basic_string_view<CharT> text_;
+        std::basic_string_view<CharT> data_;
     };
 
 
@@ -138,27 +159,49 @@ namespace cursive
             char_t t = *where_;
             switch (t)
             {
-            case detail::get_literal<char_t>(detail::literals::hashtag):
+            case detail::get_literal<char_t>(literals::hashtag):
                 return scan_header_token();
 
-            case detail::get_literal<char_t>(detail::literals::minus):
-            case detail::get_literal<char_t>(detail::literals::equal):
+            case detail::get_literal<char_t>(literals::minus) :
+            case detail::get_literal<char_t>(literals::plus) :
+                return scan_dash_token();
+
+            case detail::get_literal<char_t>(literals::equal):
                 return scan_post_header_token();
 
-            case detail::get_literal<char_t>(detail::literals::asteriks):
-            case detail::get_literal<char_t>(detail::literals::underscore):
+            case detail::get_literal<char_t>(literals::asteriks):
+            case detail::get_literal<char_t>(literals::underscore):
                 return scan_emphasis_token();
 
-            case detail::get_literal<char_t>(detail::literals::tilde):
+            case detail::get_literal<char_t>(literals::tilde):
                 return scan_strike_token();
 
-            case detail::get_literal<char_t>(detail::literals::space):
-            case detail::get_literal<char_t>(detail::literals::tab):
+            case detail::get_literal<char_t>(literals::space):
+            case detail::get_literal<char_t>(literals::tab):
                 return scan_whitespace_token();
 
-            case detail::get_literal<char_t>(detail::literals::cr):
-            case detail::get_literal<char_t>(detail::literals::nl):
+            case detail::get_literal<char_t>(literals::cr):
+            case detail::get_literal<char_t>(literals::lf):
                 return scan_eol_token();
+
+            case detail::get_literal<char_t>(literals::bang):
+                return scan_image_link();
+
+            case detail::get_literal<char_t>(literals::lbracket):
+                return scan_link(tokens::link);
+
+            case detail::get_literal<char_t>(literals::zero) :
+            case detail::get_literal<char_t>(literals::one) :
+            case detail::get_literal<char_t>(literals::two) :
+            case detail::get_literal<char_t>(literals::three) :
+            case detail::get_literal<char_t>(literals::four) :
+            case detail::get_literal<char_t>(literals::five) :
+            case detail::get_literal<char_t>(literals::six) :
+            case detail::get_literal<char_t>(literals::seven) :
+            case detail::get_literal<char_t>(literals::eight) :
+            case detail::get_literal<char_t>(literals::nine) :
+                return scan_numeric_token();
+
             default:
                 return scan_text_token();
             }
@@ -175,35 +218,62 @@ namespace cursive
         }
 
     private:
+
+        token_t scan_image_link()
+        {
+            if (where_ + 1 == end_ || *(where_ + 1) != literals::lbracket)
+            {
+                ++where_;
+                return scan_text_token();
+            }
+            ++where_;
+            return scan_link(tokens::image);
+        }
+
+        token_t scan_link(tokens type)
+        {
+            auto begin = where_;
+            if (!scan_inline_until(literals::rbracket) || *(where_ + 1) != literals::lparen)
+                return token_t(tokens::text, begin, where_);
+            auto text = make_string_view<char_t>(begin + 1, where_);
+            auto lbegin = where_;
+            if (!scan_inline_until(literals::rparen))
+                return token_t(tokens::text, begin, where_);
+            auto link = make_string_view<char_t>(lbegin + 2, where_);
+            ++where_;
+            return token_t(type, text, link);
+        }
+
         token_t scan_header_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::hashtag))
-            {
-                ++where_;
-            }
+            while (where_ != end_ && *where_ == literals::hashtag) ++where_;
+        
+            if (*where_ != literals::space)
+                return token_t(tokens::text, begin, where_);
+
+            ++where_;
             return token_t(tokens::header, begin, where_);
         }
 
         token_t scan_post_header_token()
         {
-            throw 1;
+            auto begin = where_;
+            while (where_ != end_ && *where_ == literals::equal) ++where_;
+            return token_t(tokens::post_header, begin, where_);
         }
 
         token_t scan_text_token()
         {
             auto begin = where_;
-            while (where_ != end_ && is_text(*where_))
-            {
-                ++where_;
-            }
+            while (where_ != end_ && is_text(*where_)) ++where_;
             return token_t(tokens::text, begin, where_);
         }
 
         token_t scan_whitespace_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::space) || *where_ == detail::get_literal<char_t>(detail::literals::tab))
+            while (where_ != end_ && *where_ == literals::space || *where_ == literals::tab)
             {
                 ++where_;
             }
@@ -213,7 +283,7 @@ namespace cursive
         token_t scan_emphasis_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::underscore) || *where_ == detail::get_literal<char_t>(detail::literals::asteriks))
+            while (where_ != end_ && *where_ == literals::underscore || *where_ == literals::asteriks)
             {
                 ++where_;
             }
@@ -223,7 +293,7 @@ namespace cursive
         token_t scan_strike_token()
         {
             auto begin = where_;
-            while (where_ != end_ && *where_ == detail::get_literal<char_t>(detail::literals::tilde))
+            while (where_ != end_ && *where_ == literals::tilde)
             {
                 ++where_;
             }
@@ -233,7 +303,9 @@ namespace cursive
         token_t scan_eol_token()
         {
             auto begin = where_;
-            if (*where_ == detail::get_literal<char_t>(detail::literals::cr) && where_ + 1 != end_ && *(where_ + 1) == detail::get_literal<char_t>(detail::literals::nl))
+            if (*where_ == literals::cr &&
+                 where_ + 1 != end_     && 
+                *(where_ + 1) == literals::lf)
             {
                 where_ += 2;
             }
@@ -245,10 +317,58 @@ namespace cursive
 
         }
 
+        bool scan_inline_until(literals lit)
+        {
+            while (where_ != end_ && *where_ != lit && *where_ != literals::cr && *where_ != literals::lf) ++where_;
+            if (where_ == end_)
+                return false;
+            return *where_ == lit;
+        }
+
+        token_t scan_dash_token()
+        {
+            auto begin = where_;
+            while (where_ != end_ && (*where_ == literals::minus || *where_ == literals::plus)) ++where_;
+            auto len = where_ - begin;
+            if (len == 1 && where_ + 1 != end_ && *where_ == literals::space)
+            {
+                auto end = where_;
+                ++where_;
+                return token_t(tokens::unordered_list, begin, end);
+            }
+            else if (len > 2)
+                return token_t(tokens::horizontal_rule, begin, where_);
+            else
+                return token_t(tokens::text, begin, where_);
+        }
+
+        token_t scan_numeric_token()
+        {
+            auto begin = where_;
+            while (where_ != end_ && detail::is_digit(*where_)) ++where_;
+            if (where_ != end_ && *where_ == literals::period)
+            {
+                ++where_;
+                return token_t(tokens::ordered_list, begin, where_);
+            }
+            else
+                return token_t(tokens::text, begin, where_);
+        }
+
         bool is_text(char_t c)
         {
-            return isalpha(static_cast<int>(c));
+            if (c == literals::rparen || c == literals::lparen || c == literals::rbracket)
+                return true;
+            return !detail::is_literal(c);
         }
+    private:
+
+        template<typename CharT>
+        std::basic_string_view<CharT> make_string_view(const_iterator begin, const_iterator end)
+        {
+           return std::basic_string_view<CharT>(begin._Unwrapped(), end - begin);
+        }
+
     private:
         const_iterator where_;
         const_iterator begin_;

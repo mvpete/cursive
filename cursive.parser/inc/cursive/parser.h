@@ -3,7 +3,7 @@
 
 #include <cursive/exception.h>
 #include <cursive/tokenizer.h>
-#include <cursive/element.h>
+#include <cursive/document.h>
 
 #include <stack>
 
@@ -15,6 +15,7 @@ namespace cursive
     public:
         using char_t = CharT;
         using element_t = basic_element<CharT>;
+        using document_t = basic_document<CharT>;
         using tokenizer_t = basic_tokenizer<char_t>;
         using token_t = typename basic_tokenizer<char_t>::token_t;
     public:
@@ -23,13 +24,23 @@ namespace cursive
         {
         }
 
-        element_t parse()
+        document_t parse()
         {
-            while (read_line())
-                parse_line();
+            element_t elem;
+            std::vector<token_t> line;
+            bool has_more = false;
+            while (read_line(line))
+            {
+                if (parse_line(elem, line, has_more))
+                {
+                    document_.add(elem);
+                    elem = element_t{};
+                }
+            }
             // incase we had one line.
-            parse_line();
-
+            parse_line(elem, line, has_more);
+            if(!elem.empty())
+                document_.add(elem);
             return document_;
         }
 
@@ -41,13 +52,13 @@ namespace cursive
                 throw parser_exception(tokenizer_.loc());
         }
 
-        bool read_line()
+        bool read_line(std::vector<token_t> &line)
         {
-            line_.clear();
+            line.clear();
             auto tkn = tokenizer_.next();
             while (tkn != tokens::eol && tkn != tokens::eof)
             {
-                line_.push_back(std::move(tkn));
+                line.push_back(std::move(tkn));
                 tkn = std::move(tokenizer_.next());
             }
             if (tkn == tokens::eof)
@@ -55,64 +66,160 @@ namespace cursive
             return true;
         }
 
-        void parse_line()
+        bool parse_line(element_t &elem, std::vector<token_t> &line, bool &has_more)
         {
-            if (line_.empty())
-                return;
+            if (line.empty())
+            {
+                has_more = false;
+                return true;
+            }
 
-            element_t root;
+            element_t *idx_ptr = nullptr;
             bool skip_space = true;
-            for(auto i=line_.begin(); i!=line_.end(); ++i)
+            for(auto i=line.begin(); i!=line.end(); ++i)
             {
                 const auto& t = *i;
                 switch (t.code())
                 {
                 case tokens::header:
-                    if (root.empty())
+                {
+                    auto hdr = make_header_element<CharT>(t.count());
+                    if (elem.empty())
                     {
-                        root = make_header_element<CharT>(t.count());
+                        elem = hdr;
+                        idx_ptr = &elem;
                         skip_space = true;
                     }
-                    else
+                    else if(idx_ptr!=nullptr)
                     {
-                        root.add(make_text_element(t.text()));
+                        if (idx_ptr->type() != element_types::heading)
+                            idx_ptr = &idx_ptr->add(hdr);
+                        else
+                            idx_ptr->add(make_text_element(t.text()));
                     }
                     break;
+                }
+                case tokens::image:
+                {
+                    if (elem.empty())
+                    {
+                        elem = make_element<char_t>(element_types::container);
+                        idx_ptr = &elem;
+                    }
+                    if (idx_ptr != nullptr)
+                        idx_ptr->emplace_child(make_image_element(t.text(), t.data()));
+                    break;
+                }
+                case tokens::link:
+                {
+                    if (elem.empty())
+                    {
+                        elem = make_element<char_t>(element_types::container);
+                        idx_ptr = &elem;
+                    }
+                    if (idx_ptr != nullptr)
+                        idx_ptr->emplace_child(make_link_element(t.text(), t.data()));
+                    break;
+                }
                 case tokens::text:
-                    if (root.empty())
-                        root = make_paragraph_element<CharT>(t.text());
-                    else
-                        root.add(make_text_element(t.text()));
+                    if (elem.empty())
+                    {
+                        elem = make_paragraph_element<CharT>();
+                        idx_ptr = &elem;
+                    }
+                    else if(idx_ptr == nullptr)
+                    {
+                        idx_ptr = &elem;
+                    }
+                    
+                    idx_ptr->add(make_text_element(t.text()));
+                    has_more = true;
                     skip_space = false;
                     break;
                 case tokens::space:
-                    if (!skip_space && !root.empty())
-                        root.add(make_text_element(t.text()));
+                    if (idx_ptr!=nullptr)
+                        idx_ptr->add(make_text_element(t.text()));
                     skip_space = false;
                     break;
+                case tokens::post_header:
+                {
+                    if (!elem.empty() && elem.type() == element_types::paragraph)
+                    {
+                        elem.type(element_types::heading);
+                        break;
+                    }
+
+                    if (elem.empty())
+                    {
+                        elem = make_paragraph_element<CharT>();
+                        idx_ptr = &elem;
+                        idx_ptr->add(make_text_element(t.text()));
+                    }
+                    else if (idx_ptr == nullptr)
+                    {
+                        idx_ptr = &elem;
+                    }
+                    idx_ptr->add(make_text_element(t.text()));
+                    
+                    
+                    break;
+                }
                 case tokens::emphasis:
                 {
-
-                    auto elem = parse_inline(i, line_.end());
-
-                    if (!root.empty())
+                    auto inline_elem = parse_inline(i, line.end());
+                    if (elem.empty())
                     {
-                        root.add(std::move(elem));
-                        break;
+                        elem = inline_elem;
+                        idx_ptr = &elem;
                     }
-                    else if (i + 1 == line_.end())
+                    else
                     {
-                        elem.type(element_types::paragraph);
-                        root = std::move(elem);
-                        break;
+                        idx_ptr = &elem;
+                        idx_ptr->add(std::move(inline_elem));                      
                     }
-
+                    break;
                 }
+                case tokens::horizontal_rule:
+                {
+                    if (elem.empty())
+                        elem = make_element<char_t>(element_types::horizontal_rule);
+                    if (idx_ptr != nullptr)
+                        idx_ptr->add(make_text_element(t.text()));
+                    break;
+                }
+                case tokens::unordered_list:
+                {
+                    if (elem.empty())
+                        elem = make_element<char_t>(element_types::unordered_list);
+                    else if (idx_ptr == nullptr)
+                        idx_ptr = &elem;
+
+                    if (elem.type() == element_types::unordered_list)
+                        idx_ptr = &elem.emplace_child(make_element<char_t>(element_types::list_item));
+                    else
+                        idx_ptr->add(make_text_element(t.text()));
+                    has_more = true;
+                    break;
+                }
+                case tokens::ordered_list:
+                {
+                    if (elem.empty())
+                        elem = make_element<char_t>(element_types::ordered_list);
+                    else if (idx_ptr == nullptr)
+                        idx_ptr = &elem;
+
+                    if (elem.type() == element_types::ordered_list)
+                        idx_ptr = &elem.emplace_child(make_element<char_t>(element_types::list_item));
+                    else
+                        idx_ptr->add(make_text_element(t.text()));
+                    has_more = true;
+                    break;
+                }
+                default:
+                    return false;
                 }
             }
-
-
-            document_.add(std::move(root));
+            return !has_more;
         }
 
 
@@ -124,11 +231,6 @@ namespace cursive
             if (begin + 1 == end)
                 return make_text_element(begin->text());
 
-           /* if (begin->code() == link)
-                return parse_inline_link();
-            else if (begin->code() == image)
-                reutrn parse_inline_image();*/
-
             auto bookend = begin + 1;
             auto type = begin->code();
             // advance until we cap
@@ -136,7 +238,8 @@ namespace cursive
                 bookend++;
             if (bookend == end)
             {
-                return make_text_element(bookend->text());
+                auto e = bookend - 1;
+                return make_text_element(e->text());
             }
 
             auto left = begin->count();
@@ -175,14 +278,12 @@ namespace cursive
 
     private:
         tokenizer_t tokenizer_;
-        element_t document_;
-        std::vector<token_t> line_;
-
+        document_t document_;
 
     };
 
     template <typename CharT>
-    basic_element<CharT> parse(const std::basic_string<CharT>& text)
+    basic_document<CharT> parse(const std::basic_string<CharT>& text)
     {
         std::basic_string_view<CharT> sv(text);
         basic_parser<CharT> parser(sv.cbegin(), sv.cend());

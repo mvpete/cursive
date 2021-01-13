@@ -1,13 +1,31 @@
 #ifndef __cursive_document_h__
 #define __cursive_document_h__
 
+#include <stack>
 #include <vector>
 #include <string_view>
 #include <cursive/tokenizer.h>
 
 namespace cursive
 {
-    enum class element_types { none = 0, document, heading, paragraph, ordered_list, unordered_list, plain_text, emphasis, strong, strike, container };
+    enum class element_types
+    {
+        none = 0,
+        document,
+        image,
+        link,
+        heading,
+        paragraph,
+        ordered_list,
+        unordered_list,
+        list_item,
+        plain_text,
+        emphasis,
+        strong,
+        strike,
+        horizontal_rule,
+        container
+    };
 
     template <typename CharT>
     class basic_element
@@ -15,6 +33,95 @@ namespace cursive
     public:
         using char_t = CharT;
         using element_t = basic_element<char_t>;
+
+    public:
+        /// <summary>
+       /// const_iterator is depth first traversal
+       /// </summary>
+        class const_iterator
+        {
+        public:
+            const_iterator()
+                :current_(nullptr), child_(0)
+            {
+            }
+            explicit const_iterator(const element_t& e)
+                :current_(&e), child_(0)
+            {
+            }
+
+            const_iterator& operator++()
+            {
+                move_next_sibling();
+                return *this;
+            }
+
+            const size_t depth() const 
+            {
+                return levels_.size();
+            }
+
+            bool operator==(const const_iterator& rhs) const
+            {
+                return current_ == rhs.current_ && child_ == rhs.child_;
+            }
+
+            bool operator!=(const const_iterator& rhs) const
+            {
+                return !operator==(rhs);
+            }
+
+            const element_t* operator->() const
+            {
+                return current_;
+            }
+
+            const element_t& operator*() const
+            {
+                return *current_;
+            }
+
+        private:
+            void move_next_sibling()
+            {
+                if (current_ != nullptr && child_ < current_->children().size())
+                {
+                    levels_.push(std::make_pair(current_, child_));
+                    current_ = &current_->child_at(child_);
+                    child_ = 0;
+                }
+                else
+                {
+                    while (!levels_.empty())
+                    {
+                        auto last = levels_.top();
+                        levels_.pop();
+
+                        current_ = last.first;
+                        child_ = last.second + 1;
+
+                        if (child_ < current_->children().size())
+                        {
+                            levels_.push(std::make_pair(current_, child_));
+                            current_ = &current_->child_at(child_);
+                            child_ = 0;
+                            break;
+                        }
+                    }
+                    if (levels_.empty())
+                    {
+                        current_ = nullptr;
+                        child_ = 0;
+                    }
+                }
+            }
+
+        private:
+
+            std::stack<std::pair<const element_t*,size_t>> levels_;
+            const element_t* current_;
+            size_t child_;
+        };
 
     public:
 
@@ -38,8 +145,13 @@ namespace cursive
         {
         }
 
+        basic_element(element_types type, const std::basic_string_view<char_t>& value, const std::basic_string_view<char_t>& data)
+            :type_(type), value_(value), depth_(value.size()), data_(data)
+        {
+        }
+
         basic_element(const basic_element& rhs)
-            :type_(rhs.type_), depth_(rhs.depth_), children_(rhs.children_), value_(rhs.value_)
+            :type_(rhs.type_), depth_(rhs.depth_), children_(rhs.children_), value_(rhs.value_), data_(rhs.data_)
         {
         }
 
@@ -49,14 +161,16 @@ namespace cursive
             std::swap(depth_, rhs.depth_);
             std::swap(children_, rhs.children_);
             std::swap(value_, rhs.value_);
+            std::swap(data_, rhs.data_);
         }
 
         basic_element& operator=(const basic_element& rhs)
         {
-            type_= rhs.type_;
-            depth_= rhs.depth_;
-            children_= rhs.children_;
-            value_= rhs.value_;
+            type_ = rhs.type_;
+            depth_ = rhs.depth_;
+            children_ = rhs.children_;
+            value_ = rhs.value_;
+            data_ = rhs.data_;
             return *this;
         }
 
@@ -66,6 +180,7 @@ namespace cursive
             std::swap(depth_, rhs.depth_);
             std::swap(children_, rhs.children_);
             std::swap(value_, rhs.value_);
+            std::swap(data_, rhs.data_);
             return *this;
         }
 
@@ -94,12 +209,17 @@ namespace cursive
             return value_;
         }
 
+        const std::basic_string<char_t>& data() const
+        {
+            return data_;
+        }
+
         void append(const std::basic_string_view<CharT>& text)
         {
             value_ += text;
         }
 
-        element_t& add(element_t &&child)
+        element_t& add(element_t&& child)
         {
             if (child.type() == element_types::container)
             {
@@ -119,7 +239,7 @@ namespace cursive
         {
             if (child.type() == element_types::container)
             {
-                children_.insert(children_.end(), child.children_.begin(), child.children_.end());                
+                children_.insert(children_.end(), child.children_.begin(), child.children_.end());
             }
             else
             {
@@ -131,7 +251,13 @@ namespace cursive
             return children_.back();
         }
 
-        const element_t& child_at(size_t index)
+        element_t& emplace_child(element_t&& e)
+        {
+            children_.emplace_back(std::move(e));
+            return children_.back();
+        }
+
+        const element_t& child_at(size_t index) const
         {
             return children_.at(index);
         }
@@ -141,11 +267,26 @@ namespace cursive
             return type_ == element_types::none;
         }
 
+        const_iterator begin() const
+        {
+            return const_iterator(*this);
+        }
+        const_iterator end() const
+        {
+            return const_iterator();
+        }
+    public:
+        const element_t& operator[](size_t index) const
+        {
+            return children_[index];
+        }
+
     private:
         element_types type_;
         size_t depth_;
         std::vector<element_t> children_;
-        std::basic_string<CharT> value_;
+        std::basic_string<char_t> value_;
+        std::basic_string<char_t> data_;
     };
 
     template<typename CharT>
@@ -155,9 +296,9 @@ namespace cursive
     }
 
     template<typename CharT>
-    basic_element<CharT> make_paragraph_element(const std::basic_string_view<CharT>& text)
+    basic_element<CharT> make_paragraph_element()
     {
-        return basic_element<CharT>(element_types::paragraph, text);
+        return basic_element<CharT>(element_types::paragraph);
     }
 
     template<typename CharT>
@@ -171,7 +312,18 @@ namespace cursive
     {
         return basic_element<CharT>(element_types::emphasis, depth);
     }
-    
+
+    template<typename CharT>
+    basic_element<CharT> make_link_element(const std::basic_string_view<CharT>& text, const std::basic_string_view<CharT>& url)
+    {
+        return basic_element<CharT>(element_types::link, text, url);
+    }
+
+    template<typename CharT>
+    basic_element<CharT> make_image_element(const std::basic_string_view<CharT>& text, const std::basic_string_view<CharT>& url)
+    {
+        return basic_element<CharT>(element_types::image, text, url);
+    }
 
     template<typename CharT>
     basic_element<CharT> make_element(tokens t, const std::basic_string_view<CharT>& text)
@@ -182,7 +334,22 @@ namespace cursive
             return basic_element<CharT>(element_types::emphasis, text);
         case tokens::strikethrough:
             return basic_element<CharT>(element_types::strike, text);
+        default:
+            return basic_element<CharT>(element_types::plain_text, text);
         }
+        throw 1;
+    }
+
+    template<typename CharT>
+    basic_element<CharT> make_element(element_types type)
+    {
+        return basic_element<CharT>(type);
+    }
+
+    template <typename CharT>
+    basic_element<CharT> make_unordered_list_element()
+    {
+        return basic_element<CharT>(element_types::unordered_list);
     }
 
     template <typename CharT>
@@ -191,11 +358,6 @@ namespace cursive
         return basic_element<CharT>(element_types::container);
     }
 
-    template <typename CharT>
-    basic_element<CharT> make_document()
-    {
-        return basic_element<CharT>(element_types::document);
-    }
     
 }
 
