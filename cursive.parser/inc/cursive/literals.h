@@ -2,7 +2,7 @@
 
 namespace cursive
 {
-    enum class literals { asteriks, bang, cr, equal,  hashtag, lbracket, lparen, lf, minus, plus, rbracket, rparen, space, tab, tilde, underscore, period, zero, one, two, three, four, five, six, seven, eight, nine, };
+    enum class literals { asteriks, backtick, bang, cr, equal,  hashtag, lbracket, lparen, lf, minus, plus, rbracket, rparen, space, tab, tilde, underscore, period, zero, one, two, three, four, five, six, seven, eight, nine, };
 
 namespace detail
 {
@@ -31,6 +31,8 @@ namespace detail
         {
         case literals::asteriks:
             return '*';
+        case literals::backtick:
+            return '`';
         case literals::hashtag:
             return '#';
         case literals::minus:
@@ -97,6 +99,7 @@ namespace detail
         case '-':
         case '=':
         case '~':
+        case '`':
         case ' ':
         case '\t':
         case '\r':
@@ -152,6 +155,8 @@ namespace detail
         {
         case literals::asteriks:
             return L'*';
+        case literals::backtick:
+            return L'`';
         case literals::hashtag:
             return L'#';
         case literals::minus:
@@ -219,6 +224,7 @@ namespace detail
         case L'-':
         case L'=':
         case L'~':
+        case L'`':
         case L' ':
         case L'\t':
         case L'\r':
@@ -267,6 +273,24 @@ namespace detail
         }
     }
 
+    template<typename CharT>
+    std::basic_string_view<CharT> space_string_view()
+    {
+        static_assert(false, "unknown character type");
+    }
+
+    template<>
+    std::basic_string_view<char> space_string_view()
+    {
+        return std::basic_string_view<char>(" ");
+    }
+
+    template<>
+    std::basic_string_view<wchar_t> space_string_view()
+    {
+        return std::basic_string_view<wchar_t>(L" ");
+    }
+
 }
 
     template<typename CharT>
@@ -279,5 +303,4 @@ namespace detail
     {
         return !operator==(c, lit);
     }
-
 }

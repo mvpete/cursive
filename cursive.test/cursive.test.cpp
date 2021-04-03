@@ -350,7 +350,6 @@ namespace cursivetest
 			Check::HasChildren(1, link);
 			auto text = link[0];
 
-
 			Check::HasValue("[link](path/to)", text);
 		}
 
@@ -365,6 +364,35 @@ namespace cursivetest
 2. Second item\r\n\
 \r\n\
 Nothing complicated\r\n");
+
+			auto doc = cursive::parse(source);
+
+
+		}
+
+		TEST_METHOD(test_parser_simple_code_block)
+		{
+			std::string source("```\r\n\
+	class my_class \r\n\
+	{\r\n\
+		std::string variable\r\n\
+	};\r\n\
+```\r\n");
+			auto doc = cursive::parse(source);
+			Check::HasChildren(1, doc);
+
+			auto code = doc[0];
+			Check::IsType(element_types::code, code);
+
+			Check::HasChildren(1, code);
+			auto text = code[0];
+
+			Check::IsType(element_types::plain_text, text);
+		}
+
+		TEST_METHOD(test_parser_inline_code)
+		{
+			std::string source("# Header with `inline` code");
 
 			auto doc = cursive::parse(source);
 

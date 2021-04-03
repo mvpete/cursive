@@ -162,6 +162,9 @@ namespace cursive
             case detail::get_literal<char_t>(literals::hashtag):
                 return scan_header_token();
 
+            case detail::get_literal<char_t>(literals::backtick):
+                return scan_backtick_token();
+
             case detail::get_literal<char_t>(literals::minus) :
             case detail::get_literal<char_t>(literals::plus) :
                 return scan_dash_token();
@@ -218,6 +221,13 @@ namespace cursive
         }
 
     private:
+
+        token_t scan_backtick_token()
+        {
+            auto begin = where_;
+            while (where_ != end_ && *where_ == literals::backtick) ++where_;
+            return token_t(tokens::backtick, begin, where_);
+        }
 
         token_t scan_image_link()
         {
@@ -286,6 +296,13 @@ namespace cursive
             while (where_ != end_ && *where_ == literals::underscore || *where_ == literals::asteriks)
             {
                 ++where_;
+            }
+            auto len = where_ - begin;
+            if (len == 1 && where_ + 1 != end_ && *where_ == literals::space)
+            {
+                auto end = where_;
+                ++where_;
+                return token_t(tokens::unordered_list, begin, end);
             }
             return token_t(tokens::emphasis, begin, where_);
         }
@@ -357,7 +374,7 @@ namespace cursive
 
         bool is_text(char_t c)
         {
-            if (c == literals::rparen || c == literals::lparen || c == literals::rbracket)
+            if (c == literals::rparen || c == literals::lparen || c == literals::rbracket || c == literals::period)
                 return true;
             return !detail::is_literal(c);
         }

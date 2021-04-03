@@ -14,7 +14,8 @@ namespace cursive
         {
             for(auto e=doc.begin(); e!=doc.end(); ++e)
             {
-                for (int i = 0; i < e.depth()*4; ++i)
+                const auto depth = e.depth();
+                for (int i = 0; i < depth*4; ++i)
                     os << " ";
                 switch (e->type())
                 {
@@ -29,6 +30,9 @@ namespace cursive
                     break;
                 case element_types::unordered_list:
                     os << "unordered_list " << std::endl;
+                    break;
+                case element_types::paragraph:
+                    os << "paragraph " << std::endl;
                     break;
                 case element_types::plain_text:
                     os << "(" << e->value() << ")" << std::endl;

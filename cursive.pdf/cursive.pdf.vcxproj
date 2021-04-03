@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\libharu\include;.\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\libharu\include;.\inc;..\cursive.parser\inc;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -103,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\libharu\include;.\inc;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\libharu\include;.\inc;..\cursive.parser\inc;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,12 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="inc\cursive\cursive.pdf.h" />
     <ClInclude Include="inc\cursive\document.h" />
     <ClInclude Include="inc\cursive\error.h" />
     <ClInclude Include="inc\cursive\page.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="document.cpp" />
+    <ClCompile Include="inc\cursive\cursive.pdf.cpp" />
     <ClCompile Include="page.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
